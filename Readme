@@ -1,0 +1,1 @@
+go run .\cmd\students_api\main.go -config .\config\local.yml
