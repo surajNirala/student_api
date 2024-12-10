@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/surajNirala/students_api/internal/config"
+	"github.com/surajNirala/students_api/internal/http/handlers/student"
+	"github.com/surajNirala/students_api/internal/storage/sqlite"
 )
 
 func main() {
@@ -18,11 +20,18 @@ func main() {
 	//Load Config
 	cfg := config.MustLoad()
 	//Database setup
+	storage, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	slog.Info("storage initialized", slog.String("env", cfg.Env), slog.String("Version", "1.0.0"))
 	//Setup Route
 	router := http.NewServeMux()
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to student api"))
-	})
+	router.HandleFunc("GET /api/students", student.GetStudentList(storage))
+	router.HandleFunc("POST /api/students", student.Create(storage))
+	router.HandleFunc("GET /api/students/{id}", student.GetById(storage))
+	router.HandleFunc("PUT /api/students/{id}", student.UpdateStudentById(storage))
+	router.HandleFunc("DELETE /api/students/{id}", student.DeleteStudentById(storage))
 	//Setup Server
 	server := http.Server{
 		Addr:    cfg.Addr,
